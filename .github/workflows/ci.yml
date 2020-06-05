@@ -19,18 +19,14 @@ jobs:
       with:
         java-version: 11
 
+    - name: Build Cache
+      uses: actions/cache@v2.0.0
+      with:
+        path: |
+          ~/.gradle/wrapper
+          ~/.m2/repository 
+        key: build-cache
+
     - name: Build and Test
       run: |
         ./gradlew check
-      
-    - name: Gradle Wrapper Cache
-      uses: actions/cache@v2.0.0
-      with:
-        key: gradle-wrapper
-        path: ~/.gradle/wrapper
-        
-    - name: Dependencies Cache
-      uses: actions/cache@v2.0.0
-      with:
-        key: dependencies
-        path: ~/.m2/repository
