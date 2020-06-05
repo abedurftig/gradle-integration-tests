@@ -11,11 +11,8 @@ buildscript {
 plugins {
     id("org.jetbrains.kotlin.jvm") version kotlinVersion
     id("org.jetbrains.kotlin.kapt") version kotlinVersion
-    id("org.jetbrains.kotlin.plugin.allopen") version kotlinVersion
-    id("com.github.johnrengelman.shadow") version "5.0.0"
     id("io.gitlab.arturbosch.detekt") version "1.0.1"
     id("org.jlleitschuh.gradle.ktlint") version "9.2.1"
-    jacoco
 }
 
 allprojects {
@@ -35,8 +32,6 @@ subprojects {
     apply(plugin = "kotlin-kapt")
     apply(plugin = "io.gitlab.arturbosch.detekt")
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
-    apply(plugin = "com.github.johnrengelman.shadow")
-    apply(plugin = "jacoco")
 
     dependencies {
 
@@ -46,44 +41,49 @@ subprojects {
 
         testImplementation("org.jetbrains.kotlin:kotlin-test")
         testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
-        testImplementation("org.junit.jupiter:junit-jupiter-api")
-        testImplementation("org.junit.jupiter:junit-jupiter-params:5.4.2")
+        testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
+        testImplementation("org.junit.jupiter:junit-jupiter-params:$jupiterVersion")
         testImplementation("org.assertj:assertj-core:3.12.2")
-        testImplementation("org.mockito:mockito-core:2.28.2")
-        testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0")
 
-        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
     }
 
     tasks {
+
         compileKotlin {
             kotlinOptions {
-                jvmTarget = "1.8"
+                jvmTarget = "11"
                 javaParameters = true
             }
         }
+
         compileTestKotlin {
             kotlinOptions {
-                jvmTarget = "1.8"
+                jvmTarget = "11"
                 javaParameters = true
             }
         }
+
         test {
-            useJUnitPlatform()
+            exclude("**/*Integration*")
         }
-        jacocoTestReport {
-            reports {
-                xml.isEnabled = false
-                csv.isEnabled = false
-                html.isEnabled = true
-                html.destination = file("$buildDir/reports/coverage")
-            }
+
+        task<Test>("integrationTest") {
+            description = "Runs integration tests."
+            group = "verification"
+            testClassesDirs = sourceSets.test.get().output.classesDirs
+            classpath = sourceSets.test.get().runtimeClasspath
+
+            include("**/*Integration*")
+            shouldRunAfter("test")
         }
-        shadowJar {
-            mergeServiceFiles()
-        }
+
         check {
-            dependsOn("jacocoTestReport")
+            dependsOn("integrationTest")
         }
+    }
+
+    tasks.withType(Test::class.java) {
+        useJUnitPlatform()
     }
 }
