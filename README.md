@@ -56,3 +56,12 @@ check {
     dependsOn("integrationTest")
 }
 ```
+
+#### How to test that it works
+
+In the `ExternalServiceConsumerTest` class just comment in the following line before running `./gradlew check`.
+
+```kotlin
+// Assertions.fail<Any>("Just because")
+```
+The `test` task fails and the build does not execute the `integrationTest` task. ✅
