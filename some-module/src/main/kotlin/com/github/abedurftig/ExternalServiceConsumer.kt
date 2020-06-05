@@ -1,18 +1,35 @@
 package com.github.abedurftig
 
-class ExternalServiceConsumer {
+import feign.Feign
+import feign.Logger
+import feign.RequestLine
+import feign.gson.GsonDecoder
+import feign.gson.GsonEncoder
+import feign.okhttp.OkHttpClient
+import feign.slf4j.Slf4jLogger
 
-    companion object {
-        private const val MAGIC_NUMBER = 42
-    }
-
-    fun getDataFromExternalService() =
-        SomeDataCollectedFromExternalService("I was loaded from an external service", MAGIC_NUMBER)
-
-    fun getMessage() = "Hello World, I am consuming a service!"
+internal interface ExternalService {
+    @RequestLine("GET /some/thing")
+    fun someThing(): ExternalServiceData
 }
 
-data class SomeDataCollectedFromExternalService(
-    private val message: String,
-    private val someNumber: Int
+data class ExternalServiceData(
+    private val message: String? = null,
+    private val someNumber: Int? = null
 )
+
+class ExternalServiceConsumer {
+
+    fun getDataFromExternalService() =
+        getClient().someThing()
+
+    fun getMessage() = "Hello World, I am consuming a service!"
+
+    private fun getClient() = Feign.builder()
+        .client(OkHttpClient())
+        .decoder(GsonDecoder())
+        .encoder(GsonEncoder())
+        .logger(Slf4jLogger("ExternalService.Logger"))
+        .logLevel(Logger.Level.FULL)
+        .target(ExternalService::class.java, "http://localhost:9999")
+}

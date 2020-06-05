@@ -5,6 +5,7 @@ buildscript {
     }
     dependencies {
         classpath(Plugins.kotlinGradlePlugin)
+        classpath(Plugins.dockerComposePlugin)
     }
 }
 
@@ -32,12 +33,17 @@ subprojects {
     apply(plugin = "kotlin-kapt")
     apply(plugin = "io.gitlab.arturbosch.detekt")
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
+    apply(plugin = "docker-compose")
 
     dependencies {
 
         implementation(platform("org.jetbrains.kotlin:kotlin-bom:$kotlinVersion"))
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
         implementation("org.jetbrains.kotlin:kotlin-reflect")
+        implementation("io.github.openfeign:feign-slf4j:11.0")
+        implementation("io.github.openfeign:feign-okhttp:11.0")
+        implementation("io.github.openfeign:feign-gson:11.0")
+        implementation("org.slf4j:slf4j-log4j12:1.7.3")
 
         testImplementation("org.jetbrains.kotlin:kotlin-test")
         testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
@@ -76,6 +82,8 @@ subprojects {
 
             include("**/*Integration*")
             shouldRunAfter("test")
+            dependsOn("composeUp")
+            finalizedBy("composeDown")
         }
 
         check {
